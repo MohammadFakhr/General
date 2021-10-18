@@ -11,7 +11,7 @@
 extern UART_HandleTypeDef sim800_huart;
 extern DMA_HandleTypeDef sim800_dma;
 
-type_GprsStatus GprsStatus = {0, "", 0,"...", 0, 0};
+type_Sim800Status Sim800Status = {0, "", 0,"...", 0, 0};
 
 extern void sim800Delay(U32);
 // Array of bytes to holding recieved responses from SIM800
@@ -32,7 +32,7 @@ U8 AtSendRecieve(U8 TxBuf[], U16 TxLen, U8 RxBuf[], U16 RxLen, char ValidRx[], i
 	UART_DMA_HandleTypeDef huart_dma;
 	U8 result = 0;
 
-	GprsStatus.Wait = 1;
+	Sim800Status.Wait = 1;
 	for(int i = 0; i < RetryNo; i++)
 	{
 		for(int i = 0; i < RxLen - 1; i++)
@@ -63,7 +63,7 @@ U8 AtSendRecieve(U8 TxBuf[], U16 TxLen, U8 RxBuf[], U16 RxLen, char ValidRx[], i
 			break;
 		}
 	}
-	GprsStatus.Wait = 0;
+	Sim800Status.Wait = 0;
 	return result;
 }
 /**
@@ -95,7 +95,7 @@ U8 sim800_PowerOn(void)
 		SIM800_PWRKEY_0;
 		sim800Delay(2000);
 		SIM800_PWRKEY_1;
-		sim800Delay(25000);
+		sim800Delay(5000);
 		if(AtCommand("AT\r\n", "OK", 2000, 5, 3000, 100))
 		{
 			return SIM800_EVENT_POWERON;
@@ -119,7 +119,7 @@ U8 sim800_PowerOn(void)
 //	{
 //		return SIM800_EVENT_POWERON;
 //	}
-	if(AtCommand("AT+CSAS=0\r\n", "OK", 3000, 2, 3000, 100))
+	if(AtCommand("AT+CSAS=0\r\n", "OK", 5000, 2, 5000, 100))
 	{
 		return SIM800_EVENT_POWERON;
 	}
@@ -130,7 +130,9 @@ U8 sim800_PowerOn(void)
 // Power off module -------------------------------------------------------------------------------
 U8 sim800_PowerOff(void)
 {
-	GprsStatus.Antena = 0;
+	Sim800Status.Antena = 0;
+	
+
 	// Set Baud Rate
 	AtCommand("AT\r\n", "OK", 2000, 2, 1000, 100);
 	// Power down Module
@@ -140,6 +142,7 @@ U8 sim800_PowerOff(void)
 		AtCommand("AT+CPOWD=0\r\n", "", 2000, 1, 0, 100);
 	}
 	SIM800_OFF;
+	SIM800_PWRKEY_1;
 	sim800Delay(3000);
 
 	return SIM800_OK;
@@ -199,7 +202,7 @@ U8 sim800_CheckAntenna(void)
 		strstr( AtResponse, "+CSQ: 0,1" ) || 
 		strstr( AtResponse, "+CSQ: 1,1" ) )
 	{
-		GprsStatus.Antena = 0;
+		Sim800Status.Antena = 0;
 		return SIM800_EVENT_ANTENNA;
 	}
 	// Calculate Antenna percent
@@ -217,15 +220,15 @@ U8 sim800_CheckAntenna(void)
 	}
 	if((ant > 1) &&(ant < 31))
 	{
-		GprsStatus.Antena = (ant - 2) * 100 / 28;
+		Sim800Status.Antena = (ant - 2) * 100 / 28;
 	}
 	else if(ant == 31)
 	{
-		GprsStatus.Antena = 100;
+		Sim800Status.Antena = 100;
 	}
 	else
 	{
-		GprsStatus.Antena = 0;
+		Sim800Status.Antena = 0;
 	}
 	return SIM800_OK;
 }
@@ -351,10 +354,10 @@ U8 sim800_CheckConnection()
 {
 	if(AtCommand("AT+SAPBR=2,1\r\n", "+SAPBR: 1,1,", 5000, 2, 3000, 100))
 	{
-		strcpy(GprsStatus.Gprs, "fail");
+		strcpy(Sim800Status.Gprs, "fail");
 		return SIM800_GPRS_EVENT_GPRSCONNECTION;
 	}
-	strcpy(GprsStatus.Gprs, "OK");
+	strcpy(Sim800Status.Gprs, "OK");
 	return SIM800_OK;
 }
 // Update time and date from net
@@ -699,7 +702,7 @@ U8 sim800_CheckCharge(U8 Operator)//0:Irancell, 1: Aval, 2:Rightel
 		strcpy(strPersian, "");
 		break;
 	}
-	GprsStatus.Charge = 0;
+	Sim800Status.Charge = 0;
 
 	AtCommand("AT\r\n", "OK", 2000, 2, 1000, 100);
 	sim800Delay(1000);
@@ -746,7 +749,7 @@ U8 sim800_CheckCharge(U8 Operator)//0:Irancell, 1: Aval, 2:Rightel
 		dec *= 10;
 		strTemp--;
 	}
-	GprsStatus.Charge = charge;
+	Sim800Status.Charge = charge;
 	return SIM800_OK;
 }
 

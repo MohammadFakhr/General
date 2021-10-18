@@ -93,7 +93,7 @@ typedef struct
 	char Gprs[10];
 	U32 Charge;
 	U8 Wait;
-}type_GprsStatus;
+}type_Sim800Status;
 
 void sim800_SetDelayFunction(void (*fun_ptr)(U32));
 U8 sim800_PowerOn(void);
