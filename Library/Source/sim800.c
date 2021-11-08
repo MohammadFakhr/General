@@ -95,7 +95,7 @@ U8 sim800_PowerOn(void)
 		SIM800_PWRKEY_0;
 		sim800Delay(2000);
 		SIM800_PWRKEY_1;
-		sim800Delay(5000);
+		sim800Delay(25000);
 		if(AtCommand("AT\r\n", "OK", 2000, 5, 3000, 100))
 		{
 			return SIM800_EVENT_POWERON;
@@ -131,7 +131,6 @@ U8 sim800_PowerOn(void)
 U8 sim800_PowerOff(void)
 {
 	Sim800Status.Antena = 0;
-	
 
 	// Set Baud Rate
 	AtCommand("AT\r\n", "OK", 2000, 2, 1000, 100);
@@ -258,6 +257,8 @@ U8 sim800_ReadSms(char *text, char *number, int SmsIndex)
 	char strCmd[50];
 	char* str;
 	int i = 0;
+	
+	strcpy(text, "");
 	
 	sprintf(strCmd, "AT+CMGR=%d\r\n", SmsIndex);
 	if(AtCommand(strCmd, "+CMGR", 10000, 2, 5000, 1000))
